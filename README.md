@@ -245,21 +245,21 @@ producer每发送一个消息，统计一下发送的字节数，当字节数达
 ```
 public void send(Destination destination, Message message, int deliveryMode, int priority, long
 timeToLive, AsyncCallback onComplete) throws JMSException {
-checkClosed(); //检查session的状态，如果session关闭则抛异常 
-if (destination == null) {
+    checkClosed(); //检查session的状态，如果session关闭则抛异常 
+    if (destination == null) {
         if (info.getDestination() == null) {
             throw new UnsupportedOperationException("A destination must be specified.");
-}
+        }
         throw new InvalidDestinationException("Don't understand null destinations");
     }
     ActiveMQDestination dest;
-if (destination.equals(info.getDestination())) {//检查destination的类型，如果符合要求，就转变为 ActiveMQDestination
+    if (destination.equals(info.getDestination())) {//检查destination的类型，如果符合要求，就转变为 ActiveMQDestination
         dest = (ActiveMQDestination)destination;
     } else if (info.getDestination() == null) {
         dest = ActiveMQDestination.transform(destination);
     } else {
         throw new UnsupportedOperationException("This producer can only send messages to: " +
-this.info.getDestination().getPhysicalName());
+        this.info.getDestination().getPhysicalName());
     }
     if (dest == null) {
         throw new JMSException("No destination specified");
@@ -269,16 +269,17 @@ this.info.getDestination().getPhysicalName());
         if (transformedMessage != null) {
             message = transformedMessage;
         }
-}
-if (producerWindow != null) {//如果发送窗口大小不为空，则判断发送窗口的大小决定是否阻塞
+    }
+    if (producerWindow != null) {//如果发送窗口大小不为空，则判断发送窗口的大小决定是否阻塞
         try {
             producerWindow.waitForSpace();
         } catch (InterruptedException e) {
             throw new JMSException("Send aborted due to thread interrupt.");
-} }
-//发送消息到broker的topic
-this.session.send(this, dest, message, deliveryMode, priority, timeToLive, producerWindow,
-sendTimeout, onComplete);
+        } 
+    }
+    //发送消息到broker的topic
+    this.session.send(this, dest, message, deliveryMode, priority, timeToLive, producerWindow,
+    sendTimeout, onComplete);
     stats.onMessage();
 }
 ```
