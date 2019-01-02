@@ -289,51 +289,52 @@ message, int deliveryMode, int priority, long timeToLive,MemoryUsage producerWin
 AsyncCallback onComplete) throws JMSException {
     checkClosed();
     if (destination.isTemporary() && connection.isDeleted(destination)) {
-  
-   throw new InvalidDestinationException("Cannot publish to a deleted Destination: " + destination);
-}
-synchronized (sendMutex) { //互斥锁，如果一个session的多个producer发送消息到这里，会保证消息发送的有序性
-// tell the Broker we are about to start a new transaction doStartTransaction();//告诉broker开始一个新事务，只有事务型会话中才会开启
-TransactionId txid = transactionContext.getTransactionId();//从事务上下文中获取事务id 
-long sequenceNumber = producer.getMessageSequence();
-//Set the "JMS" header fields on the original message, see 1.1 spec section 3.4.11 message.setJMSDeliveryMode(deliveryMode); //在JMS协议头中设置是否持久化标识
-long expiration = 0L;//计算消息过期时间
-if (!producer.getDisableMessageTimestamp()) {
-            long timeStamp = System.currentTimeMillis();
-            message.setJMSTimestamp(timeStamp);
-            if (timeToLive > 0) {
-                expiration = timeToLive + timeStamp;
-             }
-} message.setJMSExpiration(expiration);//设置消息过期时间 
-message.setJMSPriority(priority);//设置消息的优先级 
-message.setJMSRedelivered(false);//设置消息为非重发
-// transform to our own message format here //将不通的消息格式统一转化为ActiveMQMessage
-        ActiveMQMessage msg = ActiveMQMessageTransformation.transformMessage(message,connection);
-        msg.setDestination(destination);//设置目的地 //生成并设置消息id
-        msg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(),sequenceNumber));
-// Set the message id.
-if (msg != message) {//如果消息是经过转化的，则更新原来的消息id和目的地
-            message.setJMSMessageID(msg.getMessageId().toString());
+            throw new InvalidDestinationException("Cannot publish to a deleted Destination: " + destination);
+    }
+    synchronized (sendMutex) { //互斥锁，如果一个session的多个producer发送消息到这里，会保证消息发送的有序性
+      // tell the Broker we are about to start a new transaction 
+      doStartTransaction();//告诉broker开始一个新事务，只有事务型会话中才会开启
+      TransactionId txid = transactionContext.getTransactionId();//从事务上下文中获取事务id 
+      long sequenceNumber = producer.getMessageSequence();
+      //Set the "JMS" header fields on the original message, see 1.1 spec section 3.4.11
+      message.setJMSDeliveryMode(deliveryMode); //在JMS协议头中设置是否持久化标识
+      long expiration = 0L;//计算消息过期时间
+      if (!producer.getDisableMessageTimestamp()) {
+          long timeStamp = System.currentTimeMillis();
+          message.setJMSTimestamp(timeStamp);
+          if (timeToLive > 0) {
+              expiration = timeToLive + timeStamp;
+          }
+      } 
+      message.setJMSExpiration(expiration);//设置消息过期时间 
+      message.setJMSPriority(priority);//设置消息的优先级 
+      message.setJMSRedelivered(false);//设置消息为非重发
+      // transform to our own message format here //将不通的消息格式统一转化为ActiveMQMessage
+      ActiveMQMessage msg = ActiveMQMessageTransformation.transformMessage(message,connection);
+      msg.setDestination(destination);//设置目的地 //生成并设置消息id
+      msg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(),sequenceNumber));
+     // Set the message id.
+      if (msg != message) {//如果消息是经过转化的，则更新原来的消息id和目的地
+        message.setJMSMessageID(msg.getMessageId().toString());
             // Make sure the JMS destination is set on the foreign messages too.
-            message.setJMSDestination(destination);
-}
+        message.setJMSDestination(destination);
+      }
         //clear the brokerPath in case we are re-sending this message
-        msg.setBrokerPath(null);
-        msg.setTransactionId(txid);
-        if (connection.isCopyMessageOnSend()) {
+      msg.setBrokerPath(null);
+      msg.setTransactionId(txid);
+      if (connection.isCopyMessageOnSend()) {
             msg = (ActiveMQMessage)msg.copy();
-        }
-msg.setConnection(connection); 
-msg.onSend();//把消息属性和消息体都设置为只读，防止被修改 
-msg.setProducerId(msg.getMessageId().getProducerId()); 
-if (LOG.isTraceEnabled()) {
+      }
+      msg.setConnection(connection); 
+      msg.onSend();//把消息属性和消息体都设置为只读，防止被修改 
+      msg.setProducerId(msg.getMessageId().getProducerId()); 
+      if (LOG.isTraceEnabled()) {
             LOG.trace(getSessionId() + " sending message: " + msg);
-        }
+      }
          //如果onComplete没有设置，且发送超时时间小于0，且消息不需要反馈，且连接器不是同步发送模式，且消息非持久化或者连接器是异步发送模式
 //或者存在事务id的情况下，走异步发送，否则走同步发送
-        if (onComplete==null && sendTimeout <= 0 && !msg.isResponseRequired() &&
-!connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid !=
-null)) {
+      if (onComplete==null && sendTimeout <= 0 && !msg.isResponseRequired() && !connection.isAlwaysSyncSend() 
+      && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
             this.connection.asyncSendPacket(msg);
             if (producerWindow != null) {
                 // Since we defer lots of the marshaling till we hit the
@@ -352,13 +353,13 @@ null)) {
         }else {
             this.connection.syncSendPacket(msg, onComplete); //带回调的同步发送
         }
-}
-} 
+      }
+   } 
 }
 ```
 ActiveMQConnection. doAsyncSendPacket
 ```
-  private void doAsyncSendPacket(Command command) throws JMSException {
+private void doAsyncSendPacket(Command command) throws JMSException {
     try {
         this.transport.oneway(command);
     } catch (IOException e) {
@@ -371,7 +372,7 @@ ActiveMQConnection. doAsyncSendPacket
 从`connection=connectionFactory.createConnection();`  
 这行代码作为入口，一直跟踪到 `ActiveMQConnectionFactory. createActiveMQConnection`这个方法中。代码如下  
 ```
-   protected ActiveMQConnection createActiveMQConnection(String userName, String password) throws JMSException {
+protected ActiveMQConnection createActiveMQConnection(String userName, String password) throws JMSException {
     if (brokerURL == null) {
         throw new ConfigurationException("brokerURL not set.");
     }
@@ -390,7 +391,7 @@ createTransport
   
 默认使用的是tcp的协议  
 ```
-  protected Transport createTransport() throws JMSException {
+protected Transport createTransport() throws JMSException {
     try {
         URI connectBrokerUL = brokerURL;
         String scheme = brokerURL.getScheme();
@@ -418,7 +419,7 @@ TransportFactory.findTransportFactory
   
 这个地方又有点类似于SPI的思想,他会从META- INF/services/org/apache/activemq/transport/ 这个路径下，根据URI组装的scheme去找到匹配的class对象并且实例化，所以根据tcp为key去对应的路径下可以找到TcpTransportFactory  
 ```
-  public static TransportFactory findTransportFactory(URI location) throws IOException {
+public static TransportFactory findTransportFactory(URI location) throws IOException {
     String scheme = location.getScheme();
     if (scheme == null) {
         throw new IOException("Transport not scheme specified: [" + location + "]");
@@ -430,11 +431,10 @@ TransportFactory.findTransportFactory
             tf = (TransportFactory)TRANSPORT_FACTORY_FINDER.newInstance(scheme);
             TRANSPORT_FACTORYS.put(scheme, tf);
         } catch (Throwable e) {
-            throw IOExceptionSupport.create("Transport scheme NOT recognized: [" + scheme + "]",
-e);
-}
-}
-return tf; 
+            throw IOExceptionSupport.create("Transport scheme NOT recognized: [" + scheme + "]", e);
+       }
+    }
+    return tf; 
 }
 ```
 调用`TransportFactory.doConnect`去构建一个连接  
@@ -463,9 +463,9 @@ configure
 ```
 public Transport configure(Transport transport, WireFormat wf, Map options) throws Exception { 
 //组装一个复合的transport，这里会包装两层，一个是IactivityMonitor.另一个是WireFormatNegotiator 
-transport = compositeConfigure(transport, wf, options);
-transport = new MutexTransport(transport); //再做一层包装,MutexTransport 
-transport = new ResponseCorrelator(transport); //包装ResponseCorrelator
+   transport = compositeConfigure(transport, wf, options);
+   transport = new MutexTransport(transport); //再做一层包装,MutexTransport 
+   transport = new ResponseCorrelator(transport); //包装ResponseCorrelator
     return transport;
 }
 ```
@@ -480,7 +480,7 @@ ResponseCorrelator(MutexTransport(WireFormatNegotiator(IactivityMonitor(TcpTrans
   
 同步发送和异步发送的区别  
 ```
-  public Object request(Object command, int timeout) throws IOException { 
+public Object request(Object command, int timeout) throws IOException { 
   FutureResponse response = asyncRequest(command, null);
 return response.getResult(timeout); // 从future方法阻塞等待返回
 }
@@ -602,7 +602,7 @@ ActiveMQ Journal，使用高速缓存写入技术，大大提高了性能。
 ActiveMQMessageConsumer.receive  
 消费端同步接收消息的源码入口  
 ```
-  public Message receive() throws JMSException {
+public Message receive() throws JMSException {
     checkClosed();
     checkMessageListener(); //检查receive和MessageListener是否同时配置在当前的会话中 
     sendPullCommand(0); //如果PrefetchSizeSize为0并且unconsumerMessage为空，则发起pull命令 
@@ -619,7 +619,7 @@ sendPullCommand
 发送pull命令从broker上获取消息，前提是prefetchSize=0并且unconsumedMessages为空。  
 unconsumedMessage表示未消费的消息，这里面预读取的消息大小为prefetchSize的值。
 ```
-  protected void sendPullCommand(long timeout) throws JMSException {
+protected void sendPullCommand(long timeout) throws JMSException {
     clearDeliveredList();
     if (info.getCurrentPrefetchSize() == 0 && unconsumedMessages.isEmpty()) {
        MessagePull messagePull = new MessagePull(); 
@@ -680,7 +680,7 @@ beforeMessageIsConsumed
 这里面主要是做消息消费之前的一些准备工作，如果ACK类型不是DUPS_OK_ACKNOWLEDGE或者队列模式(简单来说就是除了Topic和DupAck这两种情况)，所有的消息先放到deliveredMessages链表的开头。并且如果当前是事务类型的会话，则判断transactedIndividualAck，如果为true，表示单条消息直接返回ack。
 否则，调用ackLater，批量应答, client端在消费消息后暂且不发送ACK，而是把它缓存下来(pendingACK)，等到这些消息的条数达到一定阈值时，只需要通过一个ACK指令把它们全部确认。这比对每条消息都逐个确认，在性能上要提高很多。
 ```
-  private void beforeMessageIsConsumed(MessageDispatch md) throws JMSException {
+private void beforeMessageIsConsumed(MessageDispatch md) throws JMSException {
     md.setDeliverySequenceId(session.getNextDeliveryId());
     lastDeliveredSequenceId = md.getMessage().getMessageId().getBrokerSequenceId();
     if (!isAutoAcknowledgeBatch()) {
