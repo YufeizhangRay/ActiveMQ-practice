@@ -1009,7 +1009,9 @@ void execute(MessageDispatch message) throws InterruptedException {
       if (!session.isSessionAsyncDispatch() && !dispatchedBySessionPool) {
                dispatch(message);
       } else {
-      //将消息直接放到队列里 messageQueue.enqueue(message); wakeup();
+      //将消息直接放到队列里 
+      messageQueue.enqueue(message); 
+      wakeup();
       }
 } 
 ```
