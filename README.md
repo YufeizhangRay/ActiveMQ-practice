@@ -27,6 +27,8 @@
   - [消息消费流程图](#消息消费流程图)
   - [消费端的PrefetchSize](#消费端的prefetchsize)
 - [ActiveMQ静态网络配置配置说明](#activemq静态网络配置配置说明)
+- [基于zookeeper+levelDB的HA集群搭建](#基于zookeeper+leveldb的ha集群搭建)
+- [### ActiveMQ的优缺点](#activemq的优缺点)
   
 ### 什么是消息中间件  
 消息中间件是值利用高效可靠的消息传递机制进行平台无关的数据交流，并基于数据通信来进行分布式系统的集成。通过提供消息传递和消息排队模型，可以在分布式架构下扩展进程之间的通信。
@@ -1217,9 +1219,10 @@ ActiveMQ 提供了 optimizeAcknowledge 来优化确认，它表示是否开启�
 优化确认一方面可以减轻 client 负担(不需要频繁的确认消息)、减少通信开销，另一方面由于延迟了确认(默认 ack 了 0.65*prefetchSize 个消息才确认)，broker 再次发送消息时又可以批量发送。
 如果只是开启了 prefetchSize，每条消息都去确认的话，broker 在收到确认后也只是发送一条消息，并不是批量发布，当然也可以通过设置 DUPS_OK_ACK 来手动延迟确认，我们需要在 brokerUrl 指定 optimizeACK 选项。
   ```
-ConnectionFactory connectionFactory= new ActiveMQConnectionFactory ("tcp://192.168.138.188:61616?jms.optimizeAcknowledge=true&jms.optimiz eAcknowledgeTimeOut=10000");
+ConnectionFactory connectionFactory= new ActiveMQConnectionFactory ("tcp://192.168.138.188:61616?
+jms.optimizeAcknowledge=true&jms.optimiz eAcknowledgeTimeOut=10000");
  ```
-注意，如果optimizeAcknowledge为true，那么prefetchSize必须大于0. 当 prefetchSize=0 的时候，表示 consumer 通过 PULL 方式从 broker 获取消息。  
+注意，如果optimizeAcknowledge为true，那么prefetchSize必须大于0。 当 prefetchSize=0 的时候，表示 consumer 通过 PULL 方式从 broker 获取消息。  
    
 到目前为止，我们知道了 optimizeAcknowledge 和 prefetchSize 的作用，两者协同工作，通过批量获取消息、并延迟批量确认，来达到一个高效的消息消
 费模型。它比仅减少了客户端在获取消息时的阻塞次数，还能减少每次获取消息时的网络通信开销。  
@@ -1233,7 +1236,7 @@ ACK_MODE
 从第一节课的学习过程中，我们知道，消息确认有四种 ACK_MODE，分别是 
 >AUTO_ACKNOWLEDGE = 1 自动确认  
 >CLIENT_ACKNOWLEDGE = 2 客户端手动确认  
->DUPS_OK_ACKNOWLEDGE = 3 自动批量确认  
+>DUPS_OK_ACKNOWLEDGE = 3 自动批量确认(延迟确认)  
 >SESSION_TRANSACTED = 0 事务提交并确认  
   
 虽然 Client 端指定了 ACK 模式,但是在 Client 与 broker 在交换 ACK 指令的时 候，还需要告知 ACK_TYPE。ACK_TYPE 表示此确认指令的类型，不同的
@@ -1315,5 +1318,31 @@ replayWhenNoConsumers 属性可以用来解决当 broker1 上有需要转发的�
 </policyEntry>
 ```
 动态网络连接  
-ActiveMQ 使用 Multicast 协议将一个 Service 和其他的 Broker 的 Service 连 接起来。Multicast 能够自动的发现其他 broker，从而替代了使用 static 功能 列表 brokers。用 multicast 协议可以在网络中频繁
+ActiveMQ 使用 Multicast 协议将一个 Service 和其他的 Broker 的 Service 连 接起来。Multicast 能够自动的发现其他 broker，从而替代了使用 static 功能 列表 brokers。
 multicast://ipadaddress:port?transportOptions  
+
+### 基于zookeeper+levelDB的HA集群搭建  
+  
+配置  
+在三台机器上安装 activemq，通过三个实例组成集群。 
+修改配置  
+directory:表示 LevelDB 所在的主工作目录
+replicas:表示总的节点数。比如我们的及群众有 3 个节点，且最多允许一个节点出现故障，那么这个值可以设置为 2，也可以设置为 3。因为计算公式为
+(replicas/2)+1。如果我们设置为 4，就表示不允许 3 个节点的任何一个节点出错。
+bind:当当前的节点为 master 时，它会根据绑定好的地址和端口来进行主从复制协议。
+zkAddress:zk 的地址 hostname:本机 IP
+sync:在认为消息被消费完成前，同步信息所存储的策略。 local_mem/local_disk
+
+### ActiveMQ的优缺点  
+  
+ActiveMQ 采用消息推送方式，所以最适合的场景是默认消息都可在短时间内被消费。数据量越大，查找和消费消息就越慢，消息积压程度与消息速度成反比。  
+    
+缺点  
+>1.吞吐量低。由于 ActiveMQ 需要建立索引，导致吞吐量下降。这是无法克服的缺点，只要使用完全符合 JMS 规范的消息中间件，就要接受这个级别的 TPS。  
+>2.无分片功能。这是一个功能缺失，JMS 并没有规定消息中间件的集群、分片机制。而由于 ActiveMQ 是伟企业级开发设计的消息中间件，初衷并不是为了处理海量消息和高并发请求。如果一台服务器不能承受更多消息，则需要横向拆分。ActiveMQ官方不提供分片机制，需要自己实现。  
+  
+适用场景  
+对TPS要求比较低的系统，可以使用ActiveMQ来实现，一方面比较简单，能够快速上手开发，另一方面可控性也比较好，还有比较好的监控机制和界面。 
+  
+不适用的场景  
+消息量巨大的场景。ActiveMQ 不支持消息自动分片机制，如果消息量巨大，导致一台服务器不能处理全部消息，就需要自己开发消息分片功能。
