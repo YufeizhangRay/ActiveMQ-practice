@@ -1324,7 +1324,7 @@ multicast://ipadaddress:port?transportOptions
 ### 基于zookeeper+levelDB的HA集群搭建  
   
 配置  
-在三台机器上安装 activemq，通过三个实例组成集群。 
+在三台机器上安装 activemq，通过三个实例组成集群。  
 修改配置  
 >directory:表示 LevelDB 所在的主工作目录  
 >replicas:表示总的节点数。比如我们的及群众有 3 个节点，且最多允许一个节点出现故障，那么这个值可以设置为 2，也可以设置为 3。因为计算公式为
