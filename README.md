@@ -27,7 +27,7 @@
   - [消息消费流程图](#消息消费流程图)
   - [消费端的PrefetchSize](#消费端的prefetchsize)
 - [ActiveMQ静态网络配置配置说明](#activemq静态网络配置配置说明)
-- [基于zookeeper+levelDB的HA集群搭建](#基于zookeeper+leveldb的ha集群搭建)
+- [基于zookeeper+levelDB的HA集群搭建](#基于zookeeper-leveldb的ha集群搭建)
 - [### ActiveMQ的优缺点](#activemq的优缺点)
   
 ### 什么是消息中间件  
