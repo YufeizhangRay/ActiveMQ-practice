@@ -67,7 +67,7 @@ netstat -an|grep 61616
 ### 从JMS规范来了解ActiveMQ  
   
 #### JMS定义  
-Java 消息服务(Java Message Service)是 java 平台中关于面向消息中间件的 API，用于在两个应用程序之间，或者分布式系统中发送消息，进行异步通信。
+Java 消息服务(Java Message Service)是 Java 平台中关于面向消息中间件的 API，用于在两个应用程序之间，或者分布式系统中发送消息，进行异步通信。
 JMS 是一个与具体平台无关的 API，绝大多数 MOM (Message Oriented Middleware)(面向消息中间件)提供商都对 JMS 提供了支持，ActiveMQ 就是其中一个实现。  
 #### 什么是MOM  
 MOM 是面向消息的中间件，使用消息传送提供者来协调消息传送操作。MOM 需要提供 API 和管理工具。客户端使用 API 调用，把消息发送到由提供者管理的目的地。在发送消息之后，客户端会继续执行其他工作，并且在接收方收到这个消息确认之前，提供者一直保留该消息。  
