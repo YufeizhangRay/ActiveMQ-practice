@@ -553,7 +553,7 @@ Mysql持久化Bean配置
 ```
   <bean id="Mysql-DS" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
       <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
-      <property name="url" value="jdbc:mysql://192.168.11.156:3306/activemq?relaxAutoCommit=true"/>
+      <property name="url" value="jdbc:mysql://192.168.188.138:3306/activemq?relaxAutoCommit=true"/>
       <property name="username" value="root"/>
       <property name="password" value="root"/>
 </bean>
