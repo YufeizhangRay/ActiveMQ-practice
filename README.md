@@ -28,7 +28,7 @@
   - [消费端的PrefetchSize](#消费端的prefetchsize)
 - [ActiveMQ静态网络配置配置说明](#activemq静态网络配置配置说明)
 - [基于zookeeper+levelDB的HA集群搭建](#基于zookeeperleveldb的ha集群搭建)
-- [### ActiveMQ的优缺点](#activemq的优缺点)
+- [ActiveMQ的优缺点](#activemq的优缺点)
   
 ### 什么是消息中间件  
 消息中间件是值利用高效可靠的消息传递机制进行平台无关的数据交流，并基于数据通信来进行分布式系统的集成。通过提供消息传递和消息排队模型，可以在分布式架构下扩展进程之间的通信。
