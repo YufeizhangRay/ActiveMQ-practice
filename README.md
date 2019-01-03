@@ -34,12 +34,12 @@
 消息中间件是值利用高效可靠的消息传递机制进行平台无关的数据交流，并基于数据通信来进行分布式系统的集成。通过提供消息传递和消息排队模型，可以在分布式架构下扩展进程之间的通信。
 ### 消息中间件能做什么  
 消息中间件主要解决的就是分布式系统之间消息传递的问题，它能够屏蔽各种平台以及协议之间的特性，实现应用程序之间的协同。  
-举个非常简单的例子，就拿一个电商平台的注册功能来简单分析下，用户注册这一个服务，不单单只是 insert 一条数据到数据库里面就完事了，还需要发送激活邮件、发送新人红包或者积分、发送短信等一系列操作。假如说这里面的每一个操作，都需要消耗 1s， 那么整个注册过程就需要耗时 4s 才能响应给用户。  
+举个非常简单的例子，就拿一个电商平台的注册功能来简单分析下，用户注册这一个服务，不单单只是 insert 一条数据到数据库里面就完事了，还需要发送激活邮件、发送新人红包或者积分、发送短信等一系列操作。假如说这里面的每一个操作，都需要消耗 1s，那么整个注册过程就需要耗时 4s 才能响应给用户。  
 ![](https://github.com/YufeizhangRay/image/blob/master/ActiveMQ/%E4%BC%A0%E7%BB%9F%E6%A8%A1%E5%9E%8B.jpeg)  
   
 但是我们从注册这个服务可以看到，每一个子操作都是相对独立的，同时，基于领域划分以后，发送激活邮件、发送短信、赠送积分及红包都属于不同的子域。所以我们可以对这些子操作进行来实现异步化执行，类似于多线程并行处理的概念。 
-如何实现异步化呢?用多线程能实现吗?多线程当然可以实现，只是消息的持久化、消息的重发这些条件，多线程并不能满足。所以需要借助一些开源中间件来解决。  
-分布式消息队列就是一个非常好的解决办法，引入分布式消 息队列以后，架构图就变成这样了(下图是异步消息队列的场景)。  
+如何实现异步化呢？用多线程能实现吗？多线程当然可以实现，只是消息的持久化、消息的重发这些条件，多线程并不能满足。所以需要借助一些开源中间件来解决。  
+分布式消息队列就是一个非常好的解决办法，引入分布式消息队列以后，架构图就变成这样了(下图是异步消息队列的场景)。  
 ![](https://github.com/YufeizhangRay/image/blob/master/ActiveMQ/MQ%E6%A8%A1%E5%9E%8B.jpeg)  
   
 通过引入分布式队列，就能够大大提升程序的处理效率，并且还解决了各个模块之间的耦合问题。  
@@ -60,17 +60,17 @@ ActiveMQ 主要应用在分布式系统架构中，帮助构建高可用、高�
 >3. 启动运行  
 >>a)普通启动:到 bin 目录下， sh activemq start  
 >>b)启动并指定日志文件 sh activemq start > /tmp/activemqlog  
+  
 >4.检查是否已启动  
 ActiveMQ 默认采用 61616 端口提供 JMS 服务，使用 8161 端口提供管理控制台服务，执行以下命令可以检查是否成功启动 ActiveMQ 服务  
 netstat -an|grep 61616  
->5.通过 http://192.168.138.188:8161 访问 activeMQ 管理页面，默认帐号密码 admin/admin  
+>5.通过 http://192.168.138.xxx:8161 访问 activeMQ 管理页面，默认帐号密码 admin/admin  
 >6.关闭 ActiveMQ; sh activemq stop  
   
 ### 从JMS规范来了解ActiveMQ  
   
 #### JMS定义  
-Java 消息服务(Java Message Service)是 Java 平台中关于面向消息中间件的 API，用于在两个应用程序之间，或者分布式系统中发送消息，进行异步通信。
-JMS 是一个与具体平台无关的 API，绝大多数 MOM (Message Oriented Middleware)(面向消息中间件)提供商都对 JMS 提供了支持，ActiveMQ 就是其中一个实现。  
+Java 消息服务(Java Message Service)是 Java 平台中关于面向消息中间件的 API，用于在两个应用程序之间，或者分布式系统中发送消息，进行异步通信。JMS 是一个与具体平台无关的 API，绝大多数 MOM (Message Oriented Middleware)(面向消息中间件)提供商都对 JMS 提供了支持，ActiveMQ 就是其中一个实现。  
 #### 什么是MOM  
 MOM 是面向消息的中间件，使用消息传送提供者来协调消息传送操作。MOM 需要提供 API 和管理工具。客户端使用 API 调用，把消息发送到由提供者管理的目的地。在发送消息之后，客户端会继续执行其他工作，并且在接收方收到这个消息确认之前，提供者一直保留该消息。  
 ![](https://github.com/YufeizhangRay/image/blob/master/ActiveMQ/JMS%E8%A7%84%E8%8C%83.jpeg)  
@@ -94,19 +94,19 @@ MOM 是面向消息的中间件，使用消息传送提供者来协调消息传�
 JMS 规范中定义了两种消息传递域:点对点(point-to- point)消息传递域 和发布/订阅 消息传递域 (publish/subscribe)  
 简单理解就是:有点类似于我们通过 qq 聊天的时候，在群里面发消息和给其中一个同学私聊消息。在群里发消息，所有群成员都能收到消息。私聊消息只能被私聊的学员能收到消息。  
 点对点消息传递域
->1.每个消息只能有一个消费者  
->2.消息的生产者和消费者之间没有时间上的相关性。无论消费者在生产者发送消息的时候是否处于运行状态，都可以提取消息  
+>1.每个消息只能有一个消费者。  
+>2.消息的生产者和消费者之间没有时间上的相关性。无论消费者在生产者发送消息的时候是否处于运行状态，都可以提取消息。  
   
 ![](https://github.com/YufeizhangRay/image/blob/master/ActiveMQ/P2P.jpeg)  
   
 发布订阅消息传递域  
->1.每个消息可以有多个消费者  
+>1.每个消息可以有多个消费者。  
 >2.生产者和消费者之间有时间上的相关性。订阅一个主题的消费者只能消费自它订阅之后发布的消息。JMS 规范允许客户创建持久订阅，这在一定程度上降低了时间上的相关性要求。持久订阅允许消费者消费它在未处于激活状态时发送的消息。  
   
 ![](https://github.com/YufeizhangRay/image/blob/master/ActiveMQ/%E8%AE%A2%E9%98%85.jpeg)  
   
 消息结构组成  
-JMS 消息由及部分组成:消息头、属性、消息体  
+JMS 消息由及部分组成:消息头、属性、消息体。  
   
 消息头  
 消息头(Header) - 消息头包含消息的识别信息和路由信息，消息头包含一些标准的属性如:
@@ -135,7 +135,7 @@ Enumeration enumeration=message.getPropertyNames();
  }
 ```
   
-消息体
+消息体  
 就是我们需要传递的消息内容，JMS API 定义了 5 种消息体格式，可以使用不同形式发送接收数据，并可以兼容现有的消息格式，其中包括  
 >TextMessage:java.lang.String 对象，如 xml 文件内容  
 >MapMessage:名/值对的集合，名是 String 对象，值类型可以是 Java 任何基本类型  
@@ -149,11 +149,10 @@ Enumeration enumeration=message.getPropertyNames();
 持久订阅  
 持久订阅的概念，也很容易理解，比如还是以 QQ 为例，我们把 QQ 退出了，但是下次登录的时候，仍然能收到离线的消息。持久订阅就是这样一个道理，持久订阅有两个特点:  
 >1.持久订阅者和非持久订阅者针对的 Domain 是 Pub/Sub，而不是 P2P  
->2.当 Broker 发送消息给订阅者时，如果订阅者处于未激活状态状态:持久订阅者可以收到消息，而非持久订阅者则收不到消息。  
+>2.当 Broker 发送消息给订阅者时，如果订阅者处于未激活状态状态，持久订阅者可以收到消息，而非持久订阅者则收不到消息。  
   
 当然这种方式也有一定的影响:
-当持久订阅者处于未激活状态时，Broker 需要为持久订阅者保存消息;
-如果持久订阅者订阅的消息太多则会溢出。
+当持久订阅者处于未激活状态时，Broker 需要为持久订阅者保存消息，如果持久订阅者订阅的消息太多则会溢出。
 
 ```
  connection=connectionFactory.createConnection();
@@ -167,18 +166,17 @@ Enumeration enumeration=message.getPropertyNames();
 ```        
 
 持久订阅时，客户端向JMS服务器注册一个自己身份的ID，当这个客户端处于离线时，JMS Provider 会为这个 ID 保存所有发送到主题的消息，当客户再次连接到 JMS Provider 时，会根据自己的 ID 得到所有当自己处于离线时发送到主题的消息。  
-这个身份 ID，在代码中的体现就是 connection 的 ClientID，这个其实很好理解，你要想收到朋友发送的 qq 消息，前提就是你得先注册个 QQ 号，而且还要有台能上网的设备，电脑或手机。设备就相当于是 clientId 是唯一的;qq 号相当于是订阅者的名称，在同一台设备上，不能用同一个 qq 号挂 2 个客户端。连接的 clientId 必须是唯一的，订阅者的名称在同一个连接内必须唯一。这样才能唯一的确定连接和订阅者。  
+这个身份 ID，在代码中的体现就是 connection 的 ClientID，这个其实很好理解，你要想收到朋友发送的 qq 消息，前提就是你得先注册个 QQ 号，而且还要有台能上网的设备，电脑或手机。设备就相当于是 clientId 是唯一的；qq 号相当于是订阅者的名称，在同一台设备上，不能用同一个 qq 号挂 2 个客户端。连接的 clientId 必须是唯一的，订阅者的名称在同一个连接内必须唯一。这样才能唯一的确定连接和订阅者。  
    
 #### JMS消息的可靠性机制
-理论上来说，我们需要保证消息中间件上的消息，只有被消费者确认过以后才会被签收，相当于我们寄一个快递出去，收件人没有收到快递，就认为这个包裹还是属于待签
-收状态，这样才能保证包裹能够安全达到收件人手里。消息中间件也是一样。   
+理论上来说，我们需要保证消息中间件上的消息，只有被消费者确认过以后才会被签收，相当于我们寄一个快递出去，收件人没有收到快递，就认为这个包裹还是属于待签收状态，这样才能保证包裹能够安全达到收件人手里。消息中间件也是一样。   
 消息的消费通常包含 3 个阶段:  
 >1.客户接收消息  
 >2.客户处理消息  
 >3.消息被确认  
   
 首先，来简单了解 JMS 的事务性会话和非事务性会话的概念。  
-JMS Session 接口提供了 commit 和 rollback 方法。事务提交意味着生产的所有消息被发送，消费的所有消息被确认; 事务回滚意味着生产的所有消息被销毁，消费的所有消息被恢复并重新提交，除非它们已经过期。事务性的会话总是牵涉到事务处理中，commit 或 rollback 方法一旦被调用，一个事务就结束了，而另一个事务被开始。关闭事务性会话将回滚其中的事务。  
+JMS Session 接口提供了 commit 和 rollback 方法。事务提交意味着生产的所有消息被发送，消费的所有消息被确认；事务回滚意味着生产的所有消息被销毁，消费的所有消息被恢复并重新提交，除非它们已经过期。事务性的会话总是牵涉到事务处理中，commit 或 rollback 方法一旦被调用，一个事务就结束了，而另一个事务被开始。关闭事务性会话将回滚其中的事务。  
   
 事务型会话  
 在事务状态下进行发送操作，消息并未真正投递到中间件， 而只有进行 session.commit 操作之后，消息才会发送到中间件，再转发到适当的消费者进行处理。如果是调用 rollback 操作，则表明当前事务期间内所发送的消息都取消掉。通过在创建 session 的时候使用 true or false 来决定 当前的会话是事务性还是非事务性。
@@ -189,7 +187,8 @@ connection.createSession(Boolean.TRUE,Session.AUTO_ ACKNOWLEDGE);
 `必须保证发送端和接收端都是事务性会话。`  
   
 在非事务型会话中  
-消息何时被确认取决于创建会话时的应答模式 `(acknowledgement mode)`。  
+消息何时被确认取决于创建会话时的应答模式(acknowledgement mode)。  
+  
 有三个可选项  
   
 Session.AUTO_ACKNOWLEDGE  
@@ -210,7 +209,7 @@ MessageProducer producer=session.createProducer(destination);
 producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 ```
 对于非持久的消息，JMS provider 不会将它存到文件/数据库等稳定的存储介质中。也就是说非持久消息驻留在内存中，如果 JMS provider 宕机，那么内存中的非持久消息会丢失。  
-对于持久消息，消息提供者会使用存储-转发机制，先将消息存储到稳定介质中，等消息发送成功后再删除。如果 JMS provider 挂掉了，那么这些未送达的消息不会丢失;JMS provider 恢复正常后，会重新读取这些消息，并传送给对应的消费者。  
+对于持久消息，消息提供者会使用存储-转发机制，先将消息存储到稳定介质中，等消息发送成功后再删除。如果 JMS provider 挂掉了，那么这些未送达的消息不会丢失；JMS provider 恢复正常后，会重新读取这些消息，并传送给对应的消费者。  
 
 #### 持久化消息和非持久化消息的发送策略  
   
@@ -371,7 +370,7 @@ private void doAsyncSendPacket(Command command) throws JMSException {
 }
     
 ```
-这个地方问题来了，this.transport是什么东西?在哪里实例化的?按照以前看源码的惯例来看，它肯定不是一个单纯的对象，一定是在创建连接的过程中初始化的。所以我们定位到代码 transport的实例化过程  
+这个地方问题来了，this.transport是什么东西？在哪里实例化的？按照以前看源码的惯例来看，它肯定不是一个单纯的对象，一定是在创建连接的过程中初始化的。所以我们定位到代码 transport的实例化过程  
 从`connection=connectionFactory.createConnection();`  
 这行代码作为入口，一直跟踪到 `ActiveMQConnectionFactory. createActiveMQConnection`这个方法中。代码如下  
 ```
@@ -384,7 +383,8 @@ protected ActiveMQConnection createActiveMQConnection(String userName, String pa
         Transport transport = createTransport();
         connection = createActiveMQConnection(transport, factoryStats);
         connection.setUserName(userName);
-        connection.setPassword(password); //省略后面的代码
+        connection.setPassword(password); 
+        //省略后面的代码
 }
 ```
 createTransport  
@@ -502,7 +502,9 @@ SystemUsage配置设置了一些系统内存和硬盘容量。
            <storeUsage> //该标记设置整个ActiveMQ节点，用于存储“持久化消息”的“可用磁盘空间”。该子标记的limit属性必须要进行设置
                <storeUsage limit="100 gb"/>
            </storeUsage>
-           <tempUsage> //一旦ActiveMQ服务节点存储的消息达到了memoryUsage的限制，非持久化消息就会被转储到 temp store区域，虽然我们说过非持久化消息不进行持久化存储，但是ActiveMQ为了防止“数据洪峰”出现时非持久化消息大量堆积致使内存耗尽的情况出现，还是会将非持久化消息写入到磁盘的临时区域——temp store。这个子标记就是为了设置这个temp store区域的“可用磁盘空间限制”
+           <tempUsage> //一旦ActiveMQ服务节点存储的消息达到了memoryUsage的限制，非持久化消息就会被转储到 temp store区域，
+          //虽然我们说过非持久化消息不进行持久化存储，但是ActiveMQ为了防止“数据洪峰”出现时非持久化消息大量堆积致使内存耗尽的情况出现，
+           //还是会将非持久化消息写入到磁盘的临时区域——temp store。这个子标记就是为了设置这个temp store区域的“可用磁盘空间限制”
                <tempUsage limit="50 gb"/>
            </tempUsage>
        </systemUsage>
@@ -522,7 +524,7 @@ ActiveMQ支持多种不同的持久化方式，主要有以下几种，无论使
 >5.JDBC With ActiveMQ Journal KahaDB存储  
   
 KahaDB是目前默认的存储方式,可用于任何场景，提高了性能和恢复能力。消息存储使用一个事务日志和一个索引文件来存储它所有的地址。
-KahaDB是一个专门针对消息持久化的解决方案，它对典型的消息使用模式进行了优化。在Kaha中，数据被追加到 data logs中。当不再需要log文件中的数据的时候，log文件会被丢弃。  
+KahaDB是一个专门针对消息持久化的解决方案，它对典型的消息使用模式进行了优化。在KahaDB中，数据被追加到 data logs中。当不再需要log文件中的数据的时候，log文件会被丢弃。  
   
 KahaDB的配置方式  
 ```
@@ -531,11 +533,11 @@ KahaDB的配置方式
  </persistenceAdapter>
 ```
 KahaDB的存储原理  
-在data/kahadb这个目录下，会生成四个文件  
-1.db.data 它是消息的索引文件，本质上是B-Tree(B树)，使用B-Tree作为索引指向db-*.log里面存储的消息  
-2.db.redo 用来进行消息恢复  
-3.db-*.log 存储消息内容。新的数据以APPEND的方式追加到日志文件末尾。属于顺序写入，因此消息存储是比较快的。默认是32M，达到阈值会自动递增。  
-4.lock文件锁，表示当前获得kahadb读写权限的broker   
+在data/kahadb这个目录下，会生成四个文件。  
+>1.db.data 它是消息的索引文件，本质上是B-Tree(B树)，使用B-Tree作为索引指向db-*.log里面存储的消息。  
+>2.db.redo 用来进行消息恢复。  
+>3.db-*.log 存储消息内容。新的数据以APPEND的方式追加到日志文件末尾。属于顺序写入，因此消息存储是比较快的。默认是32M，达到阈值会自动递增。  
+>4.lock文件锁，表示当前获得kahaDB读写权限的broker。   
   
 JDBC存储  
 使用JDBC持久化方式，数据库会创建3个表:activemq_msgs，activemq_acks和activemq_lock。 
@@ -564,7 +566,7 @@ Mysql持久化Bean配置
 ![](https://github.com/YufeizhangRay/image/blob/master/ActiveMQ/JAR.jpeg)  
   
 LevelDB存储  
-LevelDB持久化性能高于KahaDB，虽然目前默认的持久化方式仍然是KahaDB。
+LevelDB持久化性能高于KahaDB，但是目前默认的持久化方式仍然是KahaDB，并且官方因为LevelDB的维护问题，不推荐使用。  
 ```
  <persistenceAdapter>
       <levelDBdirectory="activemq-data"/>
@@ -596,7 +598,7 @@ ActiveMQ Journal，使用高速缓存写入技术，大大提高了性能。
   
 ### 消费端消费消息的原理  
   
-有两种方法可以接收消息，一种是使用同步阻塞的MessageConsumer#receive方法。另一种是使用消息监听器MessageListener。  
+有两种方法可以接收消息，一种是使用同步阻塞的MessageConsumer.receive方法。另一种是使用消息监听器MessageListener。  
 这里需要注意的是，在同一个session下，这两者不能同时工作，也就是说不能针对不同消息采用不同的接收方式。否则会抛出异常。  
 至于为什么这么做，最大的原因还是在事务性会话中，两种消费模式的事务不好管控。 
 
@@ -681,7 +683,7 @@ dequeue
   
 beforeMessageIsConsumed  
 这里面主要是做消息消费之前的一些准备工作，如果ACK类型不是DUPS_OK_ACKNOWLEDGE或者队列模式(简单来说就是除了Topic和DupAck这两种情况)，所有的消息先放到deliveredMessages链表的开头。并且如果当前是事务类型的会话，则判断transactedIndividualAck，如果为true，表示单条消息直接返回ack。
-否则，调用ackLater，批量应答, client端在消费消息后暂且不发送ACK，而是把它缓存下来(pendingACK)，等到这些消息的条数达到一定阈值时，只需要通过一个ACK指令把它们全部确认。这比对每条消息都逐个确认，在性能上要提高很多。
+否则，调用ackLater，批量应答，client端在消费消息后暂且不发送ACK，而是把它缓存下来(pendingACK)，等到这些消息的条数达到一定阈值时，只需要通过一个ACK指令把它们全部确认。这比对每条消息都逐个确认，在性能上要提高很多。
 ```
 private void beforeMessageIsConsumed(MessageDispatch md) throws JMSException {
     md.setDeliverySequenceId(session.getNextDeliveryId());
@@ -828,7 +830,7 @@ for(ServiceListener l:this.serviceListeners) {
     }
 }
 ```
-通信层都是独立来实现及解耦的, ActiveMQ 也是一样，提供了 Transport 接口和 TransportSupport 类。这个接口的主要作用是为了让客户端有消息被异步发送、同步发送和被消费的能力。接下来沿着 doStart()往下看，又调用 TcpTransport.doStart() ，接着通过 super.doStart()，调用 TransportThreadSupport.doStart()创建了一个线程，传入的是 this，调用子类的 run 方法，也就是 TcpTransport.run()。  
+通信层都是独立来实现解耦的，ActiveMQ 也是一样，提供了 Transport 接口和 TransportSupport 类。这个接口的主要作用是为了让客户端有消息被异步发送、同步发送和被消费的能力。接下来沿着 doStart()往下看，又调用 TcpTransport.doStart() ，接着通过 super.doStart()，调用 TransportThreadSupport.doStart()创建了一个线程，传入的是 this，调用子类的 run 方法，也就是 TcpTransport.run()。  
   
 TcpTransport.run  
 run 方法主要是从 socket 中读取数据包，只要 TcpTransport 没有停止，它就会不断去调用 doRun。 
@@ -875,7 +877,7 @@ protected Object readCommand() throws IOException {
 分析到这，差不多明白了传输层的主要工作是获得数据并且把数据转换为对象，再把对象对象传给 ActiveMQConnection  
 
 TransportSupport.doConsume  
-TransportSupport 类中最重要的方法是 doConsume，它的作用就是用来“消费消息”
+TransportSupport 类中最重要的方法是 doConsume，它的作用就是用来“消费消息”。
 ```
     public void doConsume(Object command) {
       if (command != null) {
@@ -887,7 +889,7 @@ TransportSupport 类中最重要的方法是 doConsume，它的作用就是用�
       }
     }
 ```
-TransportSupport 类中唯一的成员变量是 TransportListener transportListener，这也意味着一个 Transport 支持类绑定一个传送监听器类，传送监听器接口 TransportListener 最重要的方法就是 void onCommand(Object command)，它用来处理命令，这个 transportListener 是在哪里赋值的呢?再回到 ActiveMQConnection 的构造方法中。
+TransportSupport 类中唯一的成员变量是 TransportListener transportListener，这也意味着一个 Transport 支持类绑定一个传送监听器类，传送监听器接口 TransportListener 最重要的方法就是 void onCommand(Object command)，它用来处理命令，这个 transportListener 是在哪里赋值的呢？再回到 ActiveMQConnection 的构造方法中。
 传递了 ActiveMQConnection 自己本身，(ActiveMQConnection 是 TransportListener 接口的实现类之一) 于是，消息就这样从传送层到达了我们的连接层上。
 ```
 protected ActiveMQConnection(final Transport transport, IdGenerator clientIdGenerator, 
@@ -1042,7 +1044,8 @@ public void wakeup() {
                     }
                  }
               taskRunner.wakeup();
-          } catch (InterruptedException e) { Thread.currentThread().interrupt();
+          } catch (InterruptedException e) { 
+          Thread.currentThread().interrupt();
        }
     } else {
        while (iterate()) { //同步分发 }
@@ -1204,6 +1207,7 @@ md.getMessage(), consumerWithPendingTransaction);
 activemq 的 consumer 端也有窗口机制，通过 prefetchSize 就可以设置窗口大小。不同的类型的队列，prefetchSize 的默认值也是不一样的  
 >持久化队列和非持久化队列的默认值为 1000   
 >持久化topic默认值为100  
+>非持久化topic默认值为Short.MAX_VALUE - 1  
   
 消费端会根据 prefetchSize 的大小批量获取数据，比如默认值是 1000，那么消费端会预先加载 1000 条数据到本地的内存中。  
   
@@ -1224,8 +1228,7 @@ jms.optimizeAcknowledge=true&jms.optimiz eAcknowledgeTimeOut=10000");
  ```
 注意，如果optimizeAcknowledge为true，那么prefetchSize必须大于0。 当 prefetchSize=0 的时候，表示 consumer 通过 PULL 方式从 broker 获取消息。  
    
-到目前为止，我们知道了 optimizeAcknowledge 和 prefetchSize 的作用，两者协同工作，通过批量获取消息、并延迟批量确认，来达到一个高效的消息消
-费模型。它比仅减少了客户端在获取消息时的阻塞次数，还能减少每次获取消息时的网络通信开销。  
+到目前为止，我们知道了 optimizeAcknowledge 和 prefetchSize 的作用，两者协同工作，通过批量获取消息、并延迟批量确认，来达到一个高效的消息消费模型。它不仅减少了客户端在获取消息时的阻塞次数，还能减少每次获取消息时的网络通信开销。  
 需要注意的是，如果消费端的消费速度比较高，通过这两者组合是能大大提升 consumer 的性能。如果 consumer 的消费性能本身就比较慢，设置比较大的 prefetchSize 反而不能有效的达到提升消费性能的目的。因为过大的prefetchSize 不利于 consumer 端消息的负载均衡。通常情况下，我们都会部署多个 consumer 节点来提升消费端的消费性能。  
 这个优化方案还会存在另外一个潜在风险，当消息被消费之后还没有来得及确认时，client 端发生故障，那么这些消息就有可能会被重新发送给其他consumer，那么这种风险就需要 client 端能够容忍“重复”消息。  
   
@@ -1239,7 +1242,7 @@ ACK_MODE
 >DUPS_OK_ACKNOWLEDGE = 3 自动批量确认(延迟确认)  
 >SESSION_TRANSACTED = 0 事务提交并确认  
   
-虽然 Client 端指定了 ACK 模式,但是在 Client 与 broker 在交换 ACK 指令的时 候，还需要告知 ACK_TYPE。ACK_TYPE 表示此确认指令的类型，不同的
+虽然 Client 端指定了 ACK 模式，但是在 Client 与 broker 在交换 ACK 指令的时 候，还需要告知 ACK_TYPE。ACK_TYPE 表示此确认指令的类型，不同的
 ACK_TYPE 将传递着消息的状态，broker 可以根据不同的 ACK_TYPE 对消息进行不同的操作。  
   
 ACK_TYPE  
@@ -1248,10 +1251,9 @@ ACK_TYPE
 >STANDARD_ACK_TYPE = 2 "标准"类型,通常表示为消息"处理成功"，broker 端可以删除消息了。  
 >REDELIVERED_ACK_TYPE = 3 消息需"重发"，比如 consumer 处理消息时抛出了异常，broker 稍后会重新发送此消息。  
 >INDIVIDUAL_ACK_TYPE = 4 表示只确认"单条消息",无论在任何 ACK_MODE 下。  
->UNMATCHED_ACK_TYPE = 5 在 Topic 中，如果一条消息在转发给“订阅者”时，发现此消息不符合 Selector 过滤条件，那么此消息将 不会转发给订阅者，消息将会被存储引擎删除(相当于在 Broker 上确认了消息)。  
+>UNMATCHED_ACK_TYPE = 5 在 Topic 中，如果一条消息在转发给“订阅者”时，发现此消息不符合 Selector 过滤条件，那么此消息将不会转发给订阅者，消息将会被存储引擎删除(相当于在 Broker 上确认了消息)。  
   
-Client 端在不同的 ACK 模式时,将意味着在不同的时机发送 ACK 指令,每个 ACK Command 中会包含 ACK_TYPE,那么 broker 端就可以根据 ACK_TYPE 来决定
-此消息的后续操作。  
+Client 端在不同的 ACK 模式时，将意味着在不同的时机发送 ACK 指令，每个 ACK Command 中会包含 ACK_TYPE,那么 broker 端就可以根据 ACK_TYPE 来决定此消息的后续操作。  
   
 消息的重发机制原理  
   
@@ -1266,7 +1268,7 @@ Client 端在不同的 ACK 模式时,将意味着在不同的时机发送 ACK �
 ActiveMQ 中默认的死信队列是 ActiveMQ.DLQ，如果没有特别的配置，有毒的消息都会被发送到这个队列。默认情况下，如果持久消息过期以后，也会被送到 DLQ 中。  
   
 死信队列配置策略  
-缺省所有队列的死信消息都被发送到同一个缺省死信队列，不便于管理，可以通过 individualDeadLetterStrategy 或 sharedDeadLetterStrategy 策略来进 行修改。  
+缺省所有队列的死信消息都被发送到同一个缺省死信队列，不便于管理，可以通过 individualDeadLetterStrategy 或 sharedDeadLetterStrategy 策略来进行修改。  
 ```
 <destinationPolicy>
   <policyMap>
@@ -1318,7 +1320,7 @@ replayWhenNoConsumers 属性可以用来解决当 broker1 上有需要转发的�
 </policyEntry>
 ```
 动态网络连接  
-ActiveMQ 使用 Multicast 协议将一个 Service 和其他的 Broker 的 Service 连 接起来。Multicast 能够自动的发现其他 broker，从而替代了使用 static 功能 列表 brokers。
+ActiveMQ 使用 Multicast 协议将一个 Service 和其他的 Broker 的 Service 连 接起来。Multicast 能够自动的发现其他 broker，从而替代了使用 static 功能列表 brokers。  
 multicast://ipadaddress:port?transportOptions  
 
 ### 基于zookeeper+levelDB的HA集群搭建  
@@ -1334,9 +1336,8 @@ multicast://ipadaddress:port?transportOptions
 >sync:在认为消息被消费完成前，同步信息所存储的策略。 local_mem/local_disk  
   
 ### ActiveMQ的优缺点  
-  
-优点  
->ActiveMQ 采用消息推送方式，所以最适合的场景是默认消息都可在短时间内被消费。数据量越大，查找和消费消息就越慢，消息积压程度与消息速度成反比。  
+   
+ActiveMQ 采用消息推送方式，所以最适合的场景是默认消息都可在短时间内被消费。数据量越大，查找和消费消息就越慢，消息积压程度与消息速度成反比。  
     
 缺点  
 >1.吞吐量低。由于 ActiveMQ 需要建立索引，导致吞吐量下降。这是无法克服的缺点，只要使用完全符合 JMS 规范的消息中间件，就要接受这个级别的 TPS。  
