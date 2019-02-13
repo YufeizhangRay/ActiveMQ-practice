@@ -1224,7 +1224,7 @@ ActiveMQ 提供了 optimizeAcknowledge 来优化确认，它表示是否开启�
 如果只是开启了 prefetchSize，每条消息都去确认的话，broker 在收到确认后也只是发送一条消息，并不是批量发布，当然也可以通过设置 DUPS_OK_ACK 来手动延迟确认，我们需要在 brokerUrl 指定 optimizeACK 选项。
   ```
 ConnectionFactory connectionFactory= new ActiveMQConnectionFactory ("tcp://192.168.138.188:61616?
-jms.optimizeAcknowledge=true&jms.optimiz eAcknowledgeTimeOut=10000");
+jms.optimizeAcknowledge=true&jms.optimizeAcknowledgeTimeOut=10000");
  ```
 注意，如果optimizeAcknowledge为true，那么prefetchSize必须大于0。 当 prefetchSize=0 的时候，表示 consumer 通过 PULL 方式从 broker 获取消息。  
    
@@ -1236,13 +1236,13 @@ jms.optimizeAcknowledge=true&jms.optimiz eAcknowledgeTimeOut=10000");
   
 ACK_MODE  
 通过前面的源码分析，基本上已经知道了消息的消费过程，以及消息的批量获取和批量确认，那么接下来再了解下消息的确认过程。
-从第一节课的学习过程中，我们知道，消息确认有四种 ACK_MODE，分别是 
+消息确认有四种 ACK_MODE，分别是 
 >AUTO_ACKNOWLEDGE = 1 自动确认  
 >CLIENT_ACKNOWLEDGE = 2 客户端手动确认  
 >DUPS_OK_ACKNOWLEDGE = 3 自动批量确认(延迟确认)  
 >SESSION_TRANSACTED = 0 事务提交并确认  
   
-虽然 Client 端指定了 ACK 模式，但是在 Client 与 broker 在交换 ACK 指令的时 候，还需要告知 ACK_TYPE。ACK_TYPE 表示此确认指令的类型，不同的
+虽然 Client 端指定了 ACK 模式，但是在 Client 与 broker 在交换 ACK 指令的时候，还需要告知 ACK_TYPE。ACK_TYPE 表示此确认指令的类型，不同的
 ACK_TYPE 将传递着消息的状态，broker 可以根据不同的 ACK_TYPE 对消息进行不同的操作。  
   
 ACK_TYPE  
@@ -1307,11 +1307,11 @@ ActiveMQ 中默认的死信队列是 ActiveMQ.DLQ，如果没有特别的配置�
       <networkConnector uri="static://(tcp://192.168.188.138:61616,tcp://192.168.188.139:61616)"/>
 </networkConnectors>
 ```
-两个 Brokers 通过一个 static 的协议来进行网络连接。一个 Consumer 连接到 BrokerB 的一个地址上，当 Producer 在 BrokerA 上以相同的地址发送消息 是，此时消息会被转移到 BrokerB 上，也就是说 BrokerA 会转发消息到 BrokerB 上  
+两个 Brokers 通过一个 static 的协议来进行网络连接。一个 Consumer 连接到 BrokerB 的一个地址上，当 Producer 在 BrokerA 上以相同的地址发送消息，此时消息会被转移到 BrokerB 上，也就是说 BrokerA 会转发消息到 BrokerB 上  
   
 消息回流  
 replayWhenNoConsumers 属性可以用来解决当 broker1 上有需要转发的消息但是没有消费者时，把消息回流到它原始的 broker。同时把 enableAudit 设置为 false，为了防止消息回流后被当作重复消息而不被分发。  
-通过如下配置，在 activeMQ.xml 中。 分别在两台服务器都配置。即可完成消 息回流处理
+通过如下配置，在 activeMQ.xml 中，分别在两台服务器都配置，即可完成消息回流处理。
 ```
 <policyEntry queue=">" enableAudit="false">
     <networkBridgeFilterFactory>
@@ -1348,3 +1348,5 @@ ActiveMQ 采用消息推送方式，所以最适合的场景是默认消息都�
   
 不适用的场景  
 >消息量巨大的场景。ActiveMQ 不支持消息自动分片机制，如果消息量巨大，导致一台服务器不能处理全部消息，就需要自己开发消息分片功能。
+  
+[返回顶部](#activemq-practice)
